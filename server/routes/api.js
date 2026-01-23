@@ -13,6 +13,17 @@ router.get('/districts', async (req, res) => {
   }
 });
 
+// Get all places (populated)
+router.get('/places', async (req, res) => {
+  try {
+    const places = await Place.find().populate('districtId');
+    res.json(places);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
 // Get district by ID with its places
 router.get('/districts/:id', async (req, res) => {
   try {

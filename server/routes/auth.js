@@ -4,9 +4,9 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 
 // Sign up route
-router.post('/signup', async (req, res) => {
+router.post(['/signup', '/register'], async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { username, name, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -16,7 +16,7 @@ router.post('/signup', async (req, res) => {
 
     // Create new user
     const user = new User({
-      name,
+      name: name || username,
       email,
       password,
       role: req.body.role || 'user'

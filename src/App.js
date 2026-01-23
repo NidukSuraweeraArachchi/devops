@@ -10,6 +10,7 @@ import CartSidebar from './components/features/Booking/CartSidebar';
 import useCart from './hooks/useCart';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminDashboard from './components/Admin/AdminDashboard';
+import PlaceList from './components/features/Discovery/PlaceList';
 import './App.css';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
           <Routes>
             <Route path="/" element={<DistrictList />} />
             <Route path="/district/:id" element={<DistrictDetail />} />
+            <Route path="/places" element={<PlaceList />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
