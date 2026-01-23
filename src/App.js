@@ -1,27 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import DistrictList from './components/DistrictList';
 import DistrictDetail from './components/DistrictDetail';
-import Cart from './components/Cart';
 import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
+import About from './components/About';
+import CartSidebar from './components/features/Booking/CartSidebar';
+import useCart from './hooks/useCart';
 import './App.css';
 
 function App() {
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cartItems, removeFromCart } = useCart();
+
+  const handleBookFullTrip = () => {
+    alert("Booking individual cabs for all destinations in your trip...");
+    setIsCartOpen(false);
+  };
+
   return (
-    <Router>
-      <div className="App min-h-screen bg-gray-100">
-        <Navbar />
-        <div className="container mx-auto py-8 px-4">
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <div className="App min-h-screen bg-[#fafafa]">
+        <Navbar onOpenCart={() => setIsCartOpen(true)} />
+
+        <main className="container mx-auto px-4">
           <Routes>
             <Route path="/" element={<DistrictList />} />
             <Route path="/district/:id" element={<DistrictDetail />} />
-            <Route path="/cart" element={<Cart />} />
+            <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
           </Routes>
-        </div>
+        </main>
+
+        <CartSidebar
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          items={cartItems}
+          onRemove={removeFromCart}
+          onBookAll={handleBookFullTrip}
+        />
+
+        {/* Footer Accent */}
+        <footer className="py-10 border-t border-gray-100 text-center">
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase">
+            © 2026 Ceylon Explorer • Travel with Heart
+          </p>
+        </footer>
       </div>
     </Router>
   );

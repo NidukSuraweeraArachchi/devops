@@ -1,75 +1,119 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, MapPin, Info, Star } from 'lucide-react';
+import PlaceCard from './features/Discovery/PlaceCard';
+import Modal from './common/Modal';
+import CabBookingForm from './features/Booking/CabBookingForm';
+import useCart from '../hooks/useCart';
+
+// Mock data for places within districts
+const placesByDistrict = {
+  1: [ // Kandy
+    { id: 101, name: "Temple of the Tooth", rating: 4.8, location: "Kandy Town", image: "https://images.unsplash.com/photo-1546708973-b339540b3162?auto=format&fit=crop&q=80", description: "Sri Dalada Maligawa is a Buddhist temple in Kandy, Sri Lanka. It is located in the royal palace complex." },
+    { id: 102, name: "Royal Botanical Gardens", rating: 4.6, location: "Peradeniya", image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80", description: "Renowned for its collection of orchids, the garden includes more than 4000 species of plants." }
+  ],
+  2: [ // Galle
+    { id: 201, name: "Galle Dutch Fort", rating: 4.9, location: "Galle Fort", image: "https://images.unsplash.com/photo-1549419130-918c50403310?auto=format&fit=crop&q=80", description: "A UNESCO World Heritage site, first built by the Portuguese in 1588, then fortified by the Dutch." },
+    { id: 202, name: "Unawatuna Beach", rating: 4.7, location: "Unawatuna", image: "https://images.unsplash.com/photo-1589139598282-3e284a7df2d2?auto=format&fit=crop&q=80", description: "A famous banana-shaped beach with calm turquoise waters and vibrant nightlife." }
+  ]
+};
+
+const districtsData = {
+  1: { name: "Kandy", headerImage: "https://images.unsplash.com/photo-1546708973-b339540b3162?auto=format&fit=crop&q=80" },
+  2: { name: "Galle", headerImage: "https://images.unsplash.com/photo-1549419130-918c50403310?auto=format&fit=crop&q=80" }
+};
 
 const DistrictDetail = () => {
   const { id } = useParams();
-  const [places, setPlaces] = useState([]);
-  const [district, setDistrict] = useState(null);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const [selectedPlace, setSelectedPlace] = useState(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
-  useEffect(() => {
-    // Sample data - replace with API calls in real app
-    const sampleDistrict = {
-      id: 1,
-      name: 'Wayanad',
-      description: 'Beautiful hill station with wildlife sanctuaries',
-      image: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80'
-    };
+  const district = districtsData[id] || { name: 'District', headerImage: '' };
+  const places = placesByDistrict[id] || [];
 
-    const samplePlaces = [
-      {
-        id: 1,
-        name: 'Banasura Sagar Dam',
-        description: 'Largest earth dam in India',
-        image: 'https://images.unsplash.com/photo-1549880338-65ddcdfd017b?auto=format&fit=crop&w=800&q=80'
-      },
-      {
-        id: 2,
-        name: 'Edakkal Caves',
-        description: 'Ancient cave with petroglyphs',
-        image: 'https://images.unsplash.com/photo-1529676468690-0f98c1d9b0f3?auto=format&fit=crop&w=800&q=80'
-      }
-    ];
+  const handleBookCab = (place) => {
+    setSelectedPlace(place);
+    setIsBookingModalOpen(true);
+  };
 
-    setDistrict(sampleDistrict);
-    setPlaces(samplePlaces);
-  }, [id]);
-
-  if (!district) return <div className="page-container">Loading...</div>;
+  const handleBookingSubmit = async (data) => {
+    console.log('Booking confirmed:', data);
+    // Here you would call your backend API
+    alert(`Success! Cab booked to ${data.destination}.`);
+    setIsBookingModalOpen(false);
+  };
 
   return (
-    <div className="page-container">
-      <div className="relative rounded-lg overflow-hidden mb-6">
-        <img src={district.image} alt={district.name} className="w-full h-64 md:h-96 object-cover filter brightness-75" />
-        <div className="absolute inset-0 flex items-center">
-          <div className="text-white pl-6">
-            <h1 className="text-4xl md:text-5xl font-extrabold">{district.name}</h1>
-            <p className="mt-2 text-lg md:text-xl opacity-90">{district.description}</p>
+    <div className="pt-20">
+      {/* Header Banner */}
+      <div className="relative h-[25rem] w-full overflow-hidden rounded-3xl mb-12">
+        <img
+          src={district.headerImage}
+          alt={district.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white px-4">
+          <button
+            onClick={() => navigate('/')}
+            className="absolute top-8 left-8 flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-sm font-bold hover:bg-white/20 transition-all"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Explore
+          </button>
+          <div className="text-center">
+            <h1 className="text-5xl md:text-7xl font-black mb-4 tracking-tighter uppercase">{district.name}</h1>
+            <div className="flex items-center justify-center gap-4 text-white/80">
+              <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> Sri Lanka</span>
+              <span className="h-4 w-px bg-white/20" />
+              <span className="flex items-center gap-1"><Info className="w-4 h-4" /> {places.length} Attractions</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-semibold">Popular Places</h2>
-        <Link to="/" className="text-indigo-600 hover:underline">← Back to districts</Link>
+      {/* Places Grid */}
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="mb-12">
+          <h2 className="text-3xl font-black text-gray-900 mb-2">Must Visit Places</h2>
+          <div className="w-20 h-1.5 bg-[#FFB800] rounded-full" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {places.length > 0 ? (
+            places.map(place => (
+              <PlaceCard
+                key={place.id}
+                place={place}
+                onBookCab={handleBookCab}
+                onAddToCart={addToCart}
+              />
+            ))
+          ) : (
+            <div className="col-span-full py-20 text-center bg-gray-50 rounded-3xl border-2 border-dashed">
+              <p className="text-gray-400 font-bold">More details coming soon for this district!</p>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {places.map(place => (
-          <article key={place.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1">
-            <div className="h-44 w-full">
-              <img src={place.image} alt={place.name} className="w-full h-full object-cover" />
-            </div>
-            <div className="p-4">
-              <h3 className="text-xl font-semibold mb-2">{place.name}</h3>
-              <p className="text-gray-600 mb-4">{place.description}</p>
-              <div className="flex items-center gap-3">
-                <Link to={`/place/${place.id}`} className="px-3 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-700">View Details</Link>
-                <button onClick={() => console.log('Added to cart:', place.name)} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Add to Cart</button>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
+      {/* Booking Modal */}
+      <Modal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        title="Cab Booking"
+      >
+        {selectedPlace && (
+          <CabBookingForm
+            destinationName={selectedPlace.name}
+            onSubmit={handleBookingSubmit}
+            onCancel={() => setIsBookingModalOpen(false)}
+          />
+        )}
+      </Modal>
+
+      <div className="h-40" />
     </div>
   );
 };
