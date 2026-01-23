@@ -18,19 +18,20 @@ router.post('/signup', async (req, res) => {
     const user = new User({
       name,
       email,
-      password
+      password,
+      role: req.body.role || 'user'
     });
 
     await user.save();
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET || 'your_jwt_secret_key',
       { expiresIn: '24h' }
     );
 
-    res.status(201).json({ token, userId: user._id });
+    res.status(201).json({ token, userId: user._id, role: user.role });
   } catch (error) {
     res.status(500).json({ message: 'Error creating user', error: error.message });
   }
@@ -60,7 +61,7 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.json({ token, userId: user._id });
+    res.json({ token, userId: user._id, role: user.role });
   } catch (error) {
     res.status(500).json({ message: 'Error logging in', error: error.message });
   }

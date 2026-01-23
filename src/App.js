@@ -8,6 +8,8 @@ import Signup from './components/Auth/Signup';
 import About from './components/About';
 import CartSidebar from './components/features/Booking/CartSidebar';
 import useCart from './hooks/useCart';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
+import AdminDashboard from './components/Admin/AdminDashboard';
 import './App.css';
 
 function App() {
@@ -31,6 +33,14 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
 

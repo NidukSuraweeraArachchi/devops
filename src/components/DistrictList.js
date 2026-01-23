@@ -1,19 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, Compass } from 'lucide-react';
+import { Search, MapPin, Compass, Loader2 } from 'lucide-react';
 import DistrictGrid from './features/Discovery/DistrictGrid';
+import axios from 'axios';
 
 const districtsData = [
   {
     id: 1,
     name: "Kandy",
-    image: "https://images.unsplash.com/photo-1546708973-b339540b3162?auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-159051032cf62-98448744269e?auto=format&fit=crop&q=80",
     description: "The cultural capital of Sri Lanka, home to the Temple of the Sacred Tooth Relic and beautiful botanical gardens."
   },
   {
     id: 2,
     name: "Galle",
-    image: "https://images.unsplash.com/photo-1549419130-918c50403310?auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1589979482837-e7620bc297fc?auto=format&fit=crop&q=80",
     description: "A coastal gem known for its colonial charm, Dutch Fort, and stunning Indian Ocean views."
   },
   {
@@ -25,7 +26,7 @@ const districtsData = [
   {
     id: 4,
     name: "Nuwara Eliya",
-    image: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1542856204-00101eead3bd?auto=format&fit=crop&q=80",
     description: "Known as 'Little England', this misty highland retreat is the heart of Sri Lanka's tea industry."
   },
   {
@@ -44,9 +45,30 @@ const districtsData = [
 
 const DistrictList = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [districts, setDistricts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const filteredDistricts = districtsData.filter(d =>
+  useEffect(() => {
+    const fetchDistricts = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/districts');
+        if (res.data && res.data.length > 0) {
+          setDistricts(res.data);
+        } else {
+          setDistricts(districtsData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch districts, using fallback data");
+        setDistricts(districtsData);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDistricts();
+  }, []);
+
+  const filteredDistricts = districts.filter(d =>
     d.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -60,7 +82,7 @@ const DistrictList = () => {
             START YOUR ADVENTURE
           </div>
           <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-tight">
-            Discover the Heart of <span className="text-[#006994]">Sri Lanka</span>
+            Discover the Heart of <span className="text-primary">Sri Lanka</span>
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
             From misty mountains to golden shores, explore the wonders of the pearl of the Indian Ocean.
@@ -74,11 +96,11 @@ const DistrictList = () => {
             <input
               type="text"
               placeholder="Search by district (e.g. Kandy, Galle)..."
-              className="w-full pl-16 pr-8 py-6 bg-white rounded-full shadow-2xl shadow-cyan-900/10 border-none focus:ring-4 focus:ring-[#006994]/20 text-lg transition-all"
+              className="w-full pl-16 pr-8 py-6 bg-white rounded-full shadow-2xl shadow-cyan-900/10 border-none focus:ring-4 focus:ring-primary/20 text-lg transition-all"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <button className="absolute right-4 top-1/2 -translate-y-1/2 px-8 py-3 bg-[#006994] text-white rounded-full font-bold hover:bg-[#005a82] transition-colors shadow-lg">
+            <button className="absolute right-4 top-1/2 -translate-y-1/2 px-8 py-3 bg-primary text-white rounded-full font-bold hover:bg-primary-dark transition-colors shadow-lg">
               Search
             </button>
           </div>
@@ -90,17 +112,21 @@ const DistrictList = () => {
         <div className="flex items-end justify-between mb-12 px-4">
           <div>
             <h2 className="text-3xl font-black text-gray-900 mb-2">Popular Districts</h2>
-            <div className="w-20 h-1.5 bg-[#FFB800] rounded-full" />
+            <div className="w-20 h-1.5 bg-secondary rounded-full" />
           </div>
           <div className="text-gray-400 text-sm font-medium hidden md:block">
             Showing {filteredDistricts.length} results
           </div>
         </div>
 
-        {filteredDistricts.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-primary w-12 h-12" />
+          </div>
+        ) : filteredDistricts.length > 0 ? (
           <DistrictGrid
             districts={filteredDistricts}
-            onSelectDistrict={(d) => navigate(`/district/${d.id}`)}
+            onSelectDistrict={(d) => navigate(`/district/${d._id || d.id}`)}
           />
         ) : (
           <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
@@ -108,7 +134,7 @@ const DistrictList = () => {
             <h3 className="text-xl font-bold text-gray-600">No districts found matching "{searchTerm}"</h3>
             <button
               onClick={() => setSearchTerm('')}
-              className="mt-4 text-[#006994] font-bold hover:underline"
+              className="mt-4 text-primary font-bold hover:underline"
             >
               Clear search
             </button>
