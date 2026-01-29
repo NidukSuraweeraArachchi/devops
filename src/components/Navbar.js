@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Globe, ShoppingCart, User, Menu, X, LogOut } from 'lucide-react';
-import useCart from '../hooks/useCart';
+import { useCart } from '../context/CartContext';
 
 const Navbar = ({ onOpenCart }) => {
   const [isOpen, setIsOpen] = useState(false);

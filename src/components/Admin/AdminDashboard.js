@@ -12,8 +12,9 @@ const AdminDashboard = () => {
     const [error, setError] = useState('');
 
     const token = localStorage.getItem('token');
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
     const api = axios.create({
-        baseURL: 'http://localhost:5000/api',
+        baseURL: `${apiUrl}/api`,
         headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -23,7 +24,8 @@ const AdminDashboard = () => {
 
     const fetchDistricts = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/districts');
+            const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+            const res = await axios.get(`${apiUrl}/api/districts`);
             setDistricts(res.data);
             setLoading(false);
         } catch (err) {

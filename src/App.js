@@ -7,13 +7,21 @@ import Login from './components/Auth/Login';
 import Signup from './components/Auth/Signup';
 import About from './components/About';
 import CartSidebar from './components/features/Booking/CartSidebar';
-import useCart from './hooks/useCart';
+import { CartProvider, useCart } from './context/CartContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import PlaceList from './components/features/Discovery/PlaceList';
 import './App.css';
 
 function App() {
+  return (
+    <CartProvider>
+      <AppContent />
+    </CartProvider>
+  );
+}
+
+function AppContent() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { cartItems, removeFromCart } = useCart();
 
