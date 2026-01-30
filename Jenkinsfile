@@ -59,6 +59,7 @@ pipeline {
         stage('Up the containers') {
             steps {
                 sh "docker compose pull"
+                sh "docker compose down"
                 sh "docker compose up -d"
             }
         }
