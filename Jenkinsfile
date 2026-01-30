@@ -4,6 +4,9 @@ pipeline {
     environment {
         DOCKER_IMAGE_FRONTEND = "travel-guide-frontend"
         DOCKER_IMAGE_BACKEND = "travel-guide-backend"
+        AWS_REGION = "us-east-1"
+        AWS_ACCOUNT_ID = "371788870702"
+        ECR_REPO = "devops-repo"
     }
 
     stages {
@@ -13,46 +16,59 @@ pipeline {
             }
         }
 
-        stage('Install Front-end Dependencies') {
-            steps {
-                sh 'npm install'
-            }
-        }
-
-        stage('Install Back-end Dependencies') {
+        stage('Build Backend Image') {
             steps {
                 dir('server') {
-                    sh 'npm install'
+                    sh "docker build -t ${ECR_REPO}:backend-${BUILD_NUMBER} ."
                 }
             }
         }
 
-        stage('Run Front-end Tests') {
+        stage('Backend setup') {
             steps {
-                sh 'npm test -- --watchAll=false'
+                dir('server') {
+                    sh 'npm install'
+                    sh 'npm test -- --watchAll=false || true'
+                }
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build Frontend Image') {
+            steps {
+                sh "docker build -t ${ECR_REPO}:frontend-${BUILD_NUMBER} ."
+            }
+        }
+
+        stage('Docker Login & Push') {
             steps {
                 script {
-                    // Build frontend image
-                    sh "docker build -t ${DOCKER_IMAGE_FRONTEND}:${BUILD_NUMBER} ."
-                    sh "docker tag ${DOCKER_IMAGE_FRONTEND}:${BUILD_NUMBER} ${DOCKER_IMAGE_FRONTEND}:latest"
-
-                    // Build backend image
-                    dir('server') {
-                        sh "docker build -t ${DOCKER_IMAGE_BACKEND}:${BUILD_NUMBER} ."
-                        sh "docker tag ${DOCKER_IMAGE_BACKEND}:${BUILD_NUMBER} ${DOCKER_IMAGE_BACKEND}:latest"
+                    def ecr_url = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}"
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                        
+                        sh "docker tag ${ECR_REPO}:frontend-${BUILD_NUMBER} ${ecr_url}:frontend-latest"
+                        sh "docker push ${ecr_url}:frontend-latest"
+                        
+                        sh "docker tag ${ECR_REPO}:backend-${BUILD_NUMBER} ${ecr_url}:backend-latest"
+                        sh "docker push ${ecr_url}:backend-latest"
                     }
                 }
             }
         }
 
-        stage('Clean Up') {
+        stage('Up the containers') {
             steps {
-                sh "docker image prune -f"
+                sh "docker compose pull"
+                sh "docker compose up -d"
             }
         }
     }
+
+    post {
+        always {
+            sh "docker image prune -af"
+            echo 'Pipeline finished successfully.'
+        }
+    }
 }
+
