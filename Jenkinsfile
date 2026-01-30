@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE_FRONTEND = "travel-guide-frontend"
         DOCKER_IMAGE_BACKEND = "travel-guide-backend"
-        AWS_REGION = "us-east-1"
+        AWS_REGION = "eu-north-1"
         AWS_ACCOUNT_ID = "371788870702"
         ECR_REPO = "devops-repo"
     }
