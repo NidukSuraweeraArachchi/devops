@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Globe, ShoppingCart, User, Menu, X, LogOut } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -7,12 +7,25 @@ const Navbar = ({ onOpenCart }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { totalItems } = useCart();
   const navigate = useNavigate();
-  const isLoggedIn = !!localStorage.getItem('token');
-  const userRole = localStorage.getItem('role');
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'));
+  const [userRole, setUserRole] = useState(localStorage.getItem('role'));
+
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsLoggedIn(!!localStorage.getItem('token'));
+      setUserRole(localStorage.getItem('role'));
+    };
+
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => window.removeEventListener('auth-change', handleAuthChange);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    window.dispatchEvent(new Event('cart-updated'));
+    window.dispatchEvent(new Event('auth-change'));
     navigate('/login');
   };
 

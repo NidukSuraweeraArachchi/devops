@@ -111,4 +111,58 @@ router.delete('/districts/:id', auth, admin, async (req, res) => {
   }
 });
 
+// Get places by district
+router.get('/places/district/:districtId', async (req, res) => {
+  try {
+    const places = await Place.find({ districtId: req.params.districtId });
+    res.json(places);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// CREATE Place (Admin Only)
+router.post('/places', auth, admin, async (req, res) => {
+  const place = new Place({
+    name: req.body.name,
+    description: req.body.description,
+    districtId: req.body.districtId,
+    image: req.body.image,
+    location: req.body.location,
+    rating: req.body.rating,
+    estimatedCabFare: req.body.estimatedCabFare
+  });
+
+  try {
+    const newPlace = await place.save();
+    res.status(201).json(newPlace);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// UPDATE Place (Admin Only)
+router.put('/places/:id', auth, admin, async (req, res) => {
+  try {
+    const updatedPlace = await Place.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.json(updatedPlace);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// DELETE Place (Admin Only)
+router.delete('/places/:id', auth, admin, async (req, res) => {
+  try {
+    await Place.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Place deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;

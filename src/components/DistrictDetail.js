@@ -1,82 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Info, Star, Camera, Sparkles } from 'lucide-react';
+import { ArrowLeft, MapPin, Info, Star, Camera, Sparkles, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import PlaceCard from './features/Discovery/PlaceCard';
 import Modal from './common/Modal';
 import CabBookingForm from './features/Booking/CabBookingForm';
 import { useCart } from '../context/CartContext';
-
-// Enhanced mock data for places within districts with reliable images
-const placesByDistrict = {
-  1: [ // Kandy
-    {
-      id: 101,
-      name: "Temple of the Tooth",
-      rating: 4.8,
-      location: "Kandy Town",
-      image: "https://images.unsplash.com/photo-1586166898420-82c4c73b8df0?auto=format&fit=crop&w=800&q=80",
-      description: "Sri Dalada Maligawa is a Buddhist temple in Kandy, Sri Lanka. It is located in the royal palace complex, housing the sacred tooth relic of Lord Buddha."
-    },
-    {
-      id: 102,
-      name: "Royal Botanical Gardens",
-      rating: 4.6,
-      location: "Peradeniya",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80",
-      description: "Renowned for its collection of orchids, the garden includes more than 4000 species of plants, including rare medicinal plants and spice trees."
-    },
-    {
-      id: 103,
-      name: "Kandy Lake",
-      rating: 4.5,
-      location: "Kandy City",
-      image: "https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=800&q=80",
-      description: "An artificial lake in the heart of Kandy, built in 1807 by the last king of Sri Lanka, surrounded by historic sites and peaceful walking paths."
-    }
-  ],
-  2: [ // Galle
-    {
-      id: 201,
-      name: "Galle Dutch Fort",
-      rating: 4.9,
-      location: "Galle Fort",
-      image: "https://images.unsplash.com/photo-1590123874657-cd1d7a5f8d6c?auto=format&fit=crop&w=800&q=80",
-      description: "A UNESCO World Heritage site, first built by the Portuguese in 1588, then extensively fortified by the Dutch. Home to charming streets and colonial architecture."
-    },
-    {
-      id: 202,
-      name: "Unawatuna Beach",
-      rating: 4.7,
-      location: "Unawatuna",
-      image: "https://images.unsplash.com/photo-1590736969955-71cc94901144?auto=format&fit=crop&w=800&q=80",
-      description: "A famous banana-shaped beach with calm turquoise waters, vibrant coral reefs, and a lively nightlife scene. Perfect for swimming and snorkeling."
-    },
-    {
-      id: 203,
-      name: "Japanese Peace Pagoda",
-      rating: 4.6,
-      location: "Rumassala",
-      image: "https://images.unsplash.com/photo-1544550285-f813152fb2fd?auto=format&fit=crop&w=800&q=80",
-      description: "A beautiful white stupa perched on a hilltop offering panoramic views of Galle, the Indian Ocean, and surrounding jungle."
-    }
-  ]
-};
-
-const districtsData = {
-  1: {
-    name: "Kandy",
-    headerImage: "https://images.unsplash.com/photo-1586166898420-82c4c73b8df0?auto=format&fit=crop&w=1920&q=80",
-    description: "The cultural capital of Sri Lanka",
-    highlights: ["Temple of the Tooth", "Botanical Gardens", "Scenic Train Rides"]
-  },
-  2: {
-    name: "Galle",
-    headerImage: "https://images.unsplash.com/photo-1590123874657-cd1d7a5f8d6c?auto=format&fit=crop&w=1920&q=80",
-    description: "Colonial charm meets coastal beauty",
-    highlights: ["Dutch Fort", "Pristine Beaches", "Historic Architecture"]
-  }
-};
+import axios from 'axios';
 
 const DistrictDetail = () => {
   const { id } = useParams();
@@ -84,14 +14,26 @@ const DistrictDetail = () => {
   const { addToCart } = useCart();
   const [selectedPlace, setSelectedPlace] = useState(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [district, setDistrict] = useState(null);
+  const [places, setPlaces] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const district = districtsData[id] || {
-    name: 'District',
-    headerImage: 'https://images.unsplash.com/photo-1588598198062-e2a6e6615b6d?auto=format&fit=crop&w=1920&q=80',
-    description: 'Explore the beauty of Sri Lanka',
-    highlights: ['Scenic Views', 'Local Culture', 'Adventure']
-  };
-  const places = placesByDistrict[id] || [];
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+  useEffect(() => {
+    const fetchDistrictData = async () => {
+      try {
+        const res = await axios.get(`${apiUrl}/api/districts/${id}`);
+        setDistrict(res.data.district);
+        setPlaces(res.data.places || []);
+      } catch (err) {
+        console.error('Failed to fetch district data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDistrictData();
+  }, [id, apiUrl]);
 
   const handleBookCab = (place) => {
     setSelectedPlace(place);
@@ -104,6 +46,29 @@ const DistrictDetail = () => {
     setIsBookingModalOpen(false);
   };
 
+  if (loading) {
+    return (
+      <div className="pt-40 flex flex-col items-center justify-center">
+        <Loader2 className="animate-spin text-primary w-12 h-12 mb-4" />
+        <p className="text-gray-400 font-medium">Loading district details...</p>
+      </div>
+    );
+  }
+
+  if (!district) {
+    return (
+      <div className="pt-40 text-center">
+        <h2 className="text-2xl font-bold text-gray-600 mb-2">District Not Found</h2>
+        <p className="text-gray-400 mb-6">The district you're looking for doesn't exist.</p>
+        <button onClick={() => navigate('/')} className="px-6 py-3 bg-primary text-white rounded-full font-bold">
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  const headerImage = district.image || 'https://images.unsplash.com/photo-1588598198062-e2a6e6615b6d?auto=format&fit=crop&w=1920&q=80';
+
   return (
     <div className="pt-20 pb-20">
       {/* Hero Header Banner */}
@@ -114,7 +79,7 @@ const DistrictDetail = () => {
         style={{ width: 'calc(100% - 2rem)' }}
       >
         <img
-          src={district.headerImage}
+          src={headerImage}
           alt={district.name}
           className="w-full h-full object-cover"
         />
@@ -148,29 +113,23 @@ const DistrictDetail = () => {
             </h1>
             <p className="text-xl text-white/80 mb-6">{district.description}</p>
 
-            {/* Highlights */}
-            <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
-              {district.highlights.map((highlight, idx) => (
-                <span
-                  key={idx}
-                  className="px-4 py-2 bg-secondary/20 backdrop-blur-md rounded-full text-secondary text-sm font-bold border border-secondary/30"
-                >
-                  {highlight}
-                </span>
-              ))}
-            </div>
-
             {/* Stats */}
             <div className="flex items-center justify-center gap-8 mt-8 text-white/70">
               <div className="flex items-center gap-2">
                 <Camera className="w-5 h-5" />
                 <span className="font-medium">{places.length} Attractions</span>
               </div>
-              <div className="h-5 w-px bg-white/30" />
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-secondary fill-secondary" />
-                <span className="font-medium">4.8 Average Rating</span>
-              </div>
+              {places.length > 0 && (
+                <>
+                  <div className="h-5 w-px bg-white/30" />
+                  <div className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-secondary fill-secondary" />
+                    <span className="font-medium">
+                      {(places.reduce((sum, p) => sum + (p.rating || 4.5), 0) / places.length).toFixed(1)} Average Rating
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
@@ -199,7 +158,7 @@ const DistrictDetail = () => {
           {places.length > 0 ? (
             places.map((place, idx) => (
               <motion.div
-                key={place.id}
+                key={place._id || place.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + idx * 0.1 }}

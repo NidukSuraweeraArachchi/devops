@@ -31,6 +31,13 @@ const placeSchema = new mongoose.Schema({
   image: {
     type: String
   },
+  location: {
+    type: String
+  },
+  rating: {
+    type: Number,
+    default: 4.5
+  },
   estimatedCabFare: {
     type: Number
   }

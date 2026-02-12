@@ -20,6 +20,9 @@ const Login = () => {
       const res = await axios.post(`${apiUrl}/api/auth/login`, formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role);
+      localStorage.setItem('userId', res.data.userId);
+      window.dispatchEvent(new Event('cart-updated'));
+      window.dispatchEvent(new Event('auth-change'));
       navigate('/');
 
     } catch (err) {
